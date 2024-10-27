@@ -33,11 +33,21 @@ int main(int argc, char **argv) {
   while (1) {
     clientlen = sizeof(clientaddr);
     connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);  // line:netp:tiny:accept
+
+    clock_t start, end;
+
+    start = clock();
+
     Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
     printf("Accepted connection from (%s, %s)\n", hostname, port);
     doit(connfd);   // line:netp:tiny:doit
     Close(connfd);  // line:netp:tiny:close
     // break;
+
+    end = clock();
+
+    double time = ((double)(end - start) / CLOCKS_PER_SEC);
+    printf("걸린 시간: %f ----\n", time);
   }
 }
 
@@ -159,6 +169,14 @@ void serve_static(int fd, char *filename, int filesize)
   Close(srcfd);
   Rio_writen(fd, srcp, filesize);
   Munmap(srcp, filesize);
+
+  /* Send response body to client */
+  // srcfd = Open(filename, O_RDONLY, 0);
+  // srcp = (char *) malloc(filesize);
+  // rio_readn(srcfd, srcp, filesize);
+  // Close(srcfd);
+  // Rio_writen(fd, srcp, filesize);
+  // free(srcp);
 }
 
 void get_filetype(char *filename, char *filetype)
