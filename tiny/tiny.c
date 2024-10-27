@@ -37,6 +37,7 @@ int main(int argc, char **argv) {
     printf("Accepted connection from (%s, %s)\n", hostname, port);
     doit(connfd);   // line:netp:tiny:doit
     Close(connfd);  // line:netp:tiny:close
+    // break;
   }
 }
 
@@ -162,16 +163,34 @@ void serve_static(int fd, char *filename, int filesize)
 
 void get_filetype(char *filename, char *filetype)
 {
-  if (strstr(filename, ".html"))
+  if (strstr(filename, ".html")) 
+  {
     strcpy(filetype, "text/html");
-  else if (strstr(filename, ".gif"))
+  }
+  else if (strstr(filename, ".gif")) 
+  {
     strcpy(filetype, "image/gif");
+  }
   else if (strstr(filename, ".png"))
+  {
     strcpy(filetype, "image/png");
-  else if (strstr(filename, ".jpg"))
+  }
+  else if (strstr(filename, ".jpg") || strstr(filename, ".jpeg")) 
+  {
     strcpy(filetype, "image/jpeg");
+  }
+  else if (strstr(filename, ".mpg") || strstr(filename, ".mpeg"))
+  {
+    strcpy(filetype, "video/mpeg");
+  }
+  else if (strstr(filename, ".mp4")) 
+  {
+    strcpy(filetype, "video/mp4");
+  }
   else
+  {
     strcpy(filetype, "text/plain");
+  }
 }
 
 void serve_dynamic(int fd, char *filename, char *cgiargs)
