@@ -1,7 +1,26 @@
 <html>
-<head><title>test</title></head>
+<head>
+    <title>test</title>
+    <style>
+        video {
+            width: 300px;
+        }
+    </style>
+</head>
 <body> 
-<img align="middle" src="godzilla.gif">
-Dave O'Hallaron
+	<img align="middle" src="godzilla.gif">
+	Dave O'Hallaron
+	</br>
+	<video src="big_buck_bunny_720p_1mb.mp4" controls></video>
+    <form action="cgi-bin/adder" method="GET">
+        <label for="num1">Number 1:</label>
+        <input type="number" id="num1" name="num1" required>
+        <br><br>
+        <label for="num2">Number 2:</label>
+        <input type="number" id="num2" name="num2" required>
+        <br><br>
+        <button type="submit">Submit</button>
+    </form>
 </body>
 </html>
+
