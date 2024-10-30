@@ -1,7 +1,5 @@
 #include "csapp.h"
 
-#include <regex.h>
-
 /* Recommended max cache and object sizes */
 #define MAX_CACHE_SIZE 1049000
 #define MAX_OBJECT_SIZE 102400
@@ -12,7 +10,7 @@ static const char *user_agent_hdr =
     "Firefox/10.0.3\r\n";
 
 
-void doit(int fd);
+void doit(void *vargp);
 int is_valid_command_line(int argc);
 void parse_uri(char *uri, char *hostname, char *port);
 int read_request_from_client(int clientfd, char *request, char *hostname, char *port);
@@ -21,12 +19,15 @@ void send_request_to_server_and_send_to_client_with_server_response(int clientfd
 void parse_hostname_port(const char *uri, char *hostname, char *port);
 void parse_path(const char *uri, char *path);
 
+
 int main(int argc, char **argv) {
   
   if (!is_valid_command_line(argc)) {
     fprintf(stderr, "usage: %s <port>\n", argv[0]);
     exit(1);
   }
+
+  pthread_t tid;
 
   struct sockaddr_storage client_addr;
   int listenfd = Open_listenfd(argv[1]);
@@ -45,8 +46,7 @@ int main(int argc, char **argv) {
 
     printf("🍎 Accepted connection from (%s, %s)---------------------\n", hostname, port);
 
-    // 이걸 스레드로 실행하면 될 것 같다!
-    doit(connfd);
+    Pthread_create(&tid, NULL, doit, &connfd);
     
     printf("🍎 Closed connection from (%s, %s)---------------------\n", hostname, port);
   }
@@ -54,8 +54,12 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-void doit(int clientfd)
+void doit(void *vargp)
 {
+
+  Pthread_detach(pthread_self());
+
+  int clientfd = *(int *)vargp;
 
   char hostname[MAXLINE], port[MAXLINE];
 
@@ -259,7 +263,6 @@ void parse_hostname_port(const char *uri, char *hostname, char *port)
     url_ptr += 7; // "http://" 뒤로 포인터 이동
   }
 
-  // 2. 호스트네임과 포트 추출
   const char *colon_pos = strchr(url_ptr, ':');
   const char *slash_pos = strchr(url_ptr, '/');
 
@@ -296,7 +299,7 @@ void parse_path(const char *uri, char *path)
   }
   const char *slash_pos = strchr(url_ptr, '/');
 
-  // 3. 경로 추출
+  // 경로 추출
   if (slash_pos)
   {
     strcpy(path, slash_pos); // 슬래시 이후 전체를 경로로 복사
