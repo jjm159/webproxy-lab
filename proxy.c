@@ -16,8 +16,7 @@ void doit(int fd);
 int is_valid_command_line(int argc);
 void parse_uri(char *uri, char *hostname, char *port);
 int read_request_from_client(int clientfd, char *request, char *hostname, char *port);
-void send_request_to_server(int clientfd, char *request, char *response, char *hostname, char *port);
-void send_response_to_client(int clientfd, char * response);
+void send_request_to_server_and_send_to_client_with_server_response(int clientfd, char *request, char *response, char *hostname, char *port);
 
 void parse_hostname_port(const char *uri, char *hostname, char *port);
 void parse_path(const char *uri, char *path);
@@ -69,26 +68,16 @@ void doit(int clientfd)
   }
 
   printf("# result of client request parse\n%s\n", request_from_client);
-  printf("%d\n", strlen(request_from_client));
 
-  char *response_from_server = (char*) malloc(MAXLINE);
-  send_request_to_server(clientfd, request_from_client, response_from_server, hostname, port);
+  char response_from_server[MAXLINE] = { NULL };
+  send_request_to_server_and_send_to_client_with_server_response(clientfd, request_from_client, response_from_server, hostname, port);
 
   printf("# result of server response parse\n%s\n", response_from_server);
-
-  send_response_to_client(clientfd, response_from_server);
-
-  free(response_from_server);
 
   Close(clientfd);
 }
 
-void send_response_to_client(int clientfd, char * response)
-{
-  Rio_writen(clientfd, response, strlen(response));
-}
-
-void send_request_to_server(int clientfd, char *request, char *response, char *hostname, char *port) 
+void send_request_to_server_and_send_to_client_with_server_response(int clientfd, char *request, char *response, char *hostname, char *port) 
 {
   printf("# Let's send request to server\n");
 
@@ -116,46 +105,14 @@ void send_request_to_server(int clientfd, char *request, char *response, char *h
   printf("read from server fd 완료\n");
 
   char buf[MAXLINE];
-  int response_idx = 0;
-  long int body_len;
-  do
+  size_t count = 0;
+  while ((count = Rio_readlineb(&rio, buf, MAXLINE)) != 0)
   {
-    Rio_readlineb(&rio, buf, MAXBUF); // read line from server
-    if (!strncmp(buf, "Content-length", 14))
-    {
-      sscanf(buf, "%*s %ld", &body_len);
-    }
-    printf("-> %s", buf);
-    response_idx += sprintf(response + response_idx, buf);
-  } while (strcmp(buf, "\r\n"));
-
-  // send http body to client
-  if (response_idx + body_len > MAXLINE)
-  {
-    char *temp = response;
-    response = (char *)malloc(response_idx + body_len);
-    if (temp == NULL)
-    {
-      printf("fail\n");
-      exit(1);
-    }
-    memcpy(response, temp, response_idx + body_len);
-    free(temp);
+      Rio_writen(clientfd, buf, count);
+      // 추가로 response에 담기?
   }
-
-  char *temp = (char *)malloc(body_len);
-  if (temp == NULL)
-  {
-    printf("fail\n");
-    exit(1);
-  }
-
-  Rio_readnb(&rio, temp, body_len);
-  memcpy(response + response_idx, temp, body_len);
-  free(temp);
+  
   Close(serverfd);
-
-  printf("%s 끝\n", response);
 
   return;
 }
