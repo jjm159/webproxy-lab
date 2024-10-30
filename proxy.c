@@ -104,8 +104,6 @@ void doit(void *vargp)
     return;
   }
 
-  printf("# result of client request parse\n%s\n", request_from_client);
-
   int response_size = 0;
   char* response_from_server = NULL;
   send_request_to_server(clientfd, request_from_client, &response_from_server, &response_size, hostname, port);
@@ -399,11 +397,8 @@ cache_item_t *getFromCahce(cache_t *cache, char * uri)
 int updateToCache(cache_t *cache, char *uri, char *response, int size)
 {
   if (size > MAX_OBJECT_SIZE) {
-    printf("맥스 초과");
     return;
   }
-
-  printf("💩 업데이트합니다 %s : %d\n", uri, size);
 
   char* new_uri = malloc(strlen(uri)+1);
   strcpy(new_uri, uri);
@@ -413,7 +408,6 @@ int updateToCache(cache_t *cache, char *uri, char *response, int size)
 
   while (is_over_max_size(cache, size))
   {
-    printf("💩 오바 %d\n", size);
     cache_item_t *current = cache->head;
     cache->head = current->next;
     cache->total_size -= current->size;
@@ -422,7 +416,6 @@ int updateToCache(cache_t *cache, char *uri, char *response, int size)
     Free(current);
   }
 
-  printf("💩 들어갑니다 %d\n", size);
   cache_item_t * new_item = (cache_item_t *) malloc(sizeof(cache_item_t));
   new_item->key = new_uri;
   new_item->value = new_response;
@@ -437,5 +430,4 @@ int updateToCache(cache_t *cache, char *uri, char *response, int size)
   }
 
   cache->total_size += size;
-  printf("💩 들어갔ㅅ브니다. %d\n", cache->total_size);
 }
